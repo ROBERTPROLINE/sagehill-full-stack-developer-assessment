@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NoteBook - A Simple Notebook App</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-aFq/bzH65dt+w6FI2ooMVUpc+21e0SRygnTpmBvdBgSdnuTN7QbdgL+OapgHtvPp"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">MyNoteBook</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <button class="btn btn-outline-success mx-2" type="submit" onclick="showAddPanel()">
+                    ADD NOTE
+                  </button></a>
+            </li>
+          </ul>
+          <form class="d-flex" role="search">
+            <input class="form-control me-2" id="search-search" type="search" placeholder="Search" aria-label="Search">
+          </form>
+          <div class="d-flex" role="search">
+            <a href="/login"><button class="btn btn-outline-success mx-2" type="submit">
+              Logout
+            </button></a>
+           
+        </div>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="container">
+        <div class="add-note">
+            <button hidden id="submit-hidden" type="submit" class="btn btn-primary">Submit</button>
+        </div>
+        <center><h4 class="my-4">Your Notes </h4></center>
+        <div class="my-notes row">
+        </div>
+    </div>  
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-qKXV1j0HvMUeCBQ+QVp7JcfGl760yU08IQ+GpUo5hlbpg51QRiuqHAJz8+BrxE/N"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      
+      //check for stored tken in localStorage
+      const user = localStorage.getItem('access')
+        
+      if (!user ) {
+          window.location = "/login"
+      }
+
+      
+     loadData();
+
+        async function postData (url = '', data = {}){
+          /**
+          * function to post data to the server
+          */
+            const response = await fetch(url, {
+                method : 'POST',
+                headers : {
+                    'Content-Type' : 'application/json'
+                },       
+                body : JSON.stringify(data)       
+            });
+            return response.json();
+        }
+
+        async function getData (url = '', data = {}){
+          /*
+          * function to get data from the server
+          * uses GET method
+          */
+            const response = await fetch(url, {
+                method : 'GET',
+                headers : {
+                    'Content-Type' : 'application/json',
+                },          
+            });
+            return response.json();
+        }
+
+        async function loadData () {
+          /**
+          * load notes data from the server
+          * function is called on login and when new note is created
+          * also called after note is updated
+          */
+            await postData('/api/v1/notes/',{token : user} ).then((notes) => {
+               
+                //
+                let noteContainer = document.querySelector('.my-notes');
+
+                noteContainer.innerHTML = ""
+
+                notes.notes.forEach((note, index) => {
+                    
+                    let template = 
+                    `<div class="card mx-2 text-bg-secondary mb-3" style="width: 18rem;">
+                    <div class="card-body">
+                    <h5 class="card-title">${note.title}</h5>
+                    <p class="card-text">${note.content}</p>
+                    <button onclick="editNote(${note.id})" class="card-link">edit</button>
+                    <button  onclick="deleteNote(${note.id})"" class="card-link">Delete</button>
+                    </div>
+                </div>`
+
+                noteContainer.innerHTML += template;
+
+                })     
+        })
+    }
+
+    //hide the ADDNote panel
+    async function hideAddPanel(){
+      let addpanel = document.querySelector('.add-note')
+      addpanel.innerHTML = ""
+
+  }
+    async function showAddPanel(){
+      /**
+      * the addNote panel used to add new note is initailly hidden
+      * this function makes it visible 
+      */
+        let addpanel = document.querySelector('.add-note')
+        addpanel.innerHTML ="";
+
+        let str = ` 
+        <h3 class="my-4">Add a note</h3>
+            <div class="mb-3">
+              <label for="title"  class="form-label">title</label>
+              <input type="text" id="title" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+            <div class="mb-3">
+              <label for="content" class="form-label">content</label>
+              <textarea type="textarea" rows="6" id="description" class="form-control" id="exampleInputPassword1"></textarea>
+            </div>
+            <button id="submit" type="submit" class="btn btn-primary">Submit</button>`
+
+        addpanel.innerHTML += str
+
+        //an event listener for the submit button to save a new note
+        let submit = document.getElementById('submit')
+        submit.addEventListener('click', ()=>{
+            let token = localStorage.getItem('access')
+            console.log(token)
+            let title = document.getElementById('title').value
+            let desc = document.getElementById('description').value
+            postData('/api/v1/', {title , content : desc, token}).then(data => {
+                if (data.done) {
+                    //alert(data.done)
+                    hideAddPanel();
+                    loadData();
+                }
+                else alert(data.error)
+                
+            })
+        })
+    }
+
+    //an event listener to be invoked when user types inside the search textbox
+    let searchSearch = document.getElementById('search-search');
+    searchSearch.addEventListener('input', ()=>{
+
+        //every new letter type is used to search for desired notes
+        let token = localStorage.getItem('access')
+        postData('/api/v1/search', {string : searchSearch.value, token}).then(notes => {
+        
+          let noteContainer = document.querySelector('.my-notes');
+
+                noteContainer.innerHTML = ""
+
+                notes.notes.forEach((note, index) => {
+                    
+                    let template = 
+                    `<div class="card mx-2 text-bg-secondary mb-3" style="width: 18rem;">
+                    <div class="card-body">
+                    <h5 class="card-title">${note.title}</h5>
+                    <p class="card-text">${note.content}</p>
+                    <button onclick="editNote(${note.id})" class="card-link">edit</button>
+                    <button  onclick="deleteNote(${note.id})"" class="card-link">Delete</button>
+                    </div>
+                </div>`
+
+                noteContainer.innerHTML += template;
+
+        })
+    })})
+
+    
+
+    async function editNote(id) {
+
+      //edit an already existing note
+        let noteContainer = document.querySelector('.my-notes');
+        noteContainer.innerHTML = ""
+        const user = localStorage.getItem('access')
+       
+        postData(`/api/v1/notes/${id}`, body={token:user}).then(note => {
+            
+            let str = ` 
+            <h3 class="my-4">Editing</h3>
+                <div class="mb-3">
+                <label for="title"  class="form-label">title</label>
+                <input type="text" id="title-update" placeholder="${note.note.title}" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                <div class="mb-3">
+                <label for="content" class="form-label">content</label>
+                <textarea type="textarea" id="description-update" rows="6" text="${note.note.content}" class="form-control" id="exampleInputPassword1"></textarea>
+                </div>
+                <button id="submit" onclick="updateNote(${id})" type="submit" class="btn btn-primary">Update</button>`
+                noteContainer.innerHTML += str;
+
+                document.getElementById("title-update").value = note.note.title;
+                document.getElementById("description-update").value = note.note.content;
+        })
+       
+            
+    }
+
+
+    async function deleteNote (id){
+      //delete a selected note
+        data = {token : user}
+        const response = await fetch(`/api/v1/${id}`, {
+                method : 'DELETE',
+                headers : {
+                    'Content-Type' : 'application/json',
+                },       
+                body : JSON.stringify(data)       
+            }).then(response => response.json())
+            .then(data => {
+                if (data.done) {
+                    loadData();
+                }
+                else{
+                    alert(data.error)
+                }
+            })
+            
+
+    }
+    
+    async function updateNote(id) {
+      //send the new note data to the server
+        const newtitle = document.getElementById('title-update').value
+        const newcontent = document.getElementById('description-update').value
+        data = {
+            token : user,
+            title : newtitle,
+            content : newcontent
+        }
+
+        fetch(`/api/v1/${id}`, {
+                method : 'PATCH',
+                headers : {
+                    'Content-Type' : 'application/json'
+                },       
+                body : JSON.stringify(data)       
+            }).then(response => response.json())
+            .then(data => {
+              //refresh notes after editing
+              loadData();
+            })
+    }
+
+    </script>
+  </body>
+</html>

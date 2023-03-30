@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login | NoteBook - A Simple Notebook App</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-aFq/bzH65dt+w6FI2ooMVUpc+21e0SRygnTpmBvdBgSdnuTN7QbdgL+OapgHtvPp"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="/">MyNoteBook</a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="/">Home</a>
+              </li>
+              
+            <div class="d-flex" role="search">
+              
+              <a href="/signup"><button class="btn btn-outline-success mx-2" type="submit">
+                Signup
+              </button><a/>
+          </div>
+          </div>
+        </div>
+      </nav>
+    <div class="container">
+        <h1>login</h1>
+        <div>
+            <div class="mb-3">
+              <label for="exampleInputEmail1" class="form-label">Email address</label>
+              <input type="email" class="form-control" id="email" aria-describedby="emailHelp">
+            </div>
+            <div class="mb-3">
+              <label for="exampleInputPassword1" class="form-label">Password</label>
+              <input type="password" class="form-control" id="password">
+            </div>
+            <button type="submit" id="submit" class="btn btn-primary">Login</button>
+        </div>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-qKXV1j0HvMUeCBQ+QVp7JcfGl760yU08IQ+GpUo5hlbpg51QRiuqHAJz8+BrxE/N"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+        async function postData (url = '', data = {}){
+            const response = await fetch(url, {
+                method : 'POST',
+                headers : {
+                    'Content-Type' : 'application/json'
+                },       
+                body : JSON.stringify(data)       
+            });
+            return response.json();
+        }
+
+
+        let submit = document.getElementById('submit')
+        submit.addEventListener('click', ()=>{
+            let email = document.getElementById('email').value
+            let password = document.getElementById('password').value
+            if (!email || ! password ){
+                alert('please submit all required information')
+            }
+
+            postData('api/v1/login', {email, password}).then(data => {
+                console.log(data)
+                if (!data.error) {
+                    console.log(data.acces)
+                    localStorage.setItem('access', data.acces )
+                    localStorage.setItem('refresh', data.refresh)
+                    document.location = "/"
+                }
+                else{
+                    alert(data.error)
+                }
+            })
+
+        })
+    </script>
+  </body>
+</html>
