@@ -3,7 +3,7 @@ An assessment for sagehill full stack developer intern
 
 ##HOW TO RUN
 
-GO TO THE ROOT FOLDER
+GO TO THE ROOT FOLDER;
 
-RUN npm install
-RUN npm start
+RUN npm install ;
+RUN npm start;
